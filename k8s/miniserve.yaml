@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: miniserve
+  namespace: jenkins
+  labels:
+    app: miniserve
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: miniserve
+  template:
+    metadata:
+      labels:
+        app: miniserve
+    spec:
+      containers:
+      - name: miniserve
+        image: svenstaro/miniserve:alpine
+        args: ["--upload-files", "--mkdir", "-p", "8080", "/data"]
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: miniserve
+  namespace: jenkins
+spec:
+  selector:
+    app: miniserve
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

@@ -1,0 +1,17 @@
+[project]
+name = "jenkins-stock-api"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.128.0",
+    "httpx>=0.28.1",
+    "pytest>=9.0.2",
+    "uvicorn>=0.40.0",
+    "yfinance>=1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

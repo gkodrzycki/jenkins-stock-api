@@ -1,0 +1,45 @@
+pipeline {
+    agent {
+        kubernetes {
+            inheritFrom 'uv-agent'
+        }
+    }
+
+    parameters {
+        string(name: 'UPSTREAM_BUILD_NUMBER', description: 'Build number from the main pipeline to deploy')
+    }
+
+    environment {
+        APP_NAME = 'jenkins-stock-api'
+        IMAGE_TAG = "${params.UPSTREAM_BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Download Artifact') {
+            steps {
+                container('uv') {
+                     sh "curl -f -o app.tar.gz \"http://miniserve.jenkins.svc.cluster.local:8080/jenkins-stock-api-v${params.UPSTREAM_BUILD_NUMBER}.tar.gz\""
+                     sh "tar -xzf app.tar.gz"
+                }
+            }
+        }
+
+        stage('Build image') {
+            steps {
+                container('uv') {
+                    sh "docker build -t ${APP_NAME}:v${IMAGE_TAG} ."
+                    echo "Image ${APP_NAME}:${IMAGE_TAG} built."
+                }
+            }
+        }
+
+        stage('Deploy to K8s') {
+            steps {
+                container('uv') {
+                    sh "kubectl set image deployment/jenkins-stock-api ${APP_NAME}=${APP_NAME}:v${IMAGE_TAG} -n jenkins"
+                    sh "kubectl rollout status deployment/jenkins-stock-api -n jenkins"
+                }
+            }
+        }
+    }
+}
